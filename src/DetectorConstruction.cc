@@ -158,24 +158,31 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 {  
   G4bool checkOverlaps = true;    //check for overlaps
   G4int strip_num[12] = { 24, 30, 34, 30, 44, 30, 55, 30, 65, 30, 75, 30};    //the number of stripes in each layer
-  G4RotationMatrix* rm_env = new G4RotationMatrix;
-  rm_env->rotateX(90 * deg);
+  G4RotationMatrix* rm_Fe = new G4RotationMatrix;
+  rm_Fe->rotateX(90 * deg);
   G4double x_a = 105 * cm;
   G4double x_b = x_a + 210 * sqrt(3) * cm;
 
-  auto solidworld = new G4Box( "World", 6 * m , 6 * m , 2.5 * m );
+  auto solidworld = new G4Box( "World", 20 * m , 20 * m , 20 * m );
   auto logicworld = new G4LogicalVolume( solidworld, fAir, "World" );
   auto physworld = new G4PVPlacement( nullptr, G4ThreeVector(), logicworld, "World", 0, false, 0, checkOverlaps);
 
   //Fe frame
-  for ( G4int i4 = 0; i4 < 12; i4 ++ )
+  for ( G4int i4 = 1; i4 < 13; i4 ++ )
   {
-    rm_env->rotateZ( i4 * 30 * deg);
-    G4double env_posX = -1 * 105 * cm;
-    G4double env_posY = -1 * 105 * ( 2.5 + 1.5 * sqrt(3) ) * cm;
-    auto solidenv = new G4Trd( "Envelope",  0.5 * x_a, 0.5 * x_b, 75 * cm, 75 * cm, 52.5 * cm);
-    auto logicenv = new G4LogicalVolume( solidenv, fFe, "Envelope" );
-    auto physenv = new G4PVPlacement( rm_env, G4ThreeVector( env_posX, env_posY, 0 ), logicenv, "Envelope", logicworld, false, i4, checkOverlaps);
+    G4RotationMatrix* rm_env = new G4RotationMatrix;
+    rm_env->rotateZ( -1 * i4 * 30 * deg);
+    G4double env_sizeX = 210 * ( 1 + sqrt(3) ) * cm;
+    G4double env_sizeY = 210 * ( 3 + 1.5 * sqrt(3) ) * cm;
+    auto solidenv = new G4Box( "Envelope", env_sizeX , env_sizeY , 75 * cm );
+    auto logicenv = new G4LogicalVolume( solidenv, fAir, "Envelope" );
+    auto physenv = new G4PVPlacement( rm_env, G4ThreeVector(), logicenv, "Envelope", logicworld, false, i4, checkOverlaps);
+
+    G4double Fe_posX = -1 * 105 * cm;
+    G4double Fe_posY = -1 * 105 * ( 2.5 + 1.5 * sqrt(3) ) * cm;
+    auto solidFe = new G4Trd( "Fe",  0.5 * x_a, 0.5 * x_b, 75 * cm, 75 * cm, 52.5 * cm);
+    auto logicFe = new G4LogicalVolume( solidFe, fFe, "Fe" );
+    auto physFe = new G4PVPlacement( rm_Fe, G4ThreeVector( Fe_posX, Fe_posY, 0 ), logicFe, "Fe", logicenv, false, i4, checkOverlaps);
 
     G4Box* solidSiPM = new G4Box("SiPM", 3 * mm, 3 * mm, 0.005 * cm);
 
@@ -232,7 +239,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                             G4ThreeVector( strip_posX, strip_posY, strip_posZ ),
                             logicstrip,
                             "Strip",
-                            logicenv,
+                            logicFe,
                             false,
                             i1,
                             checkOverlaps);
