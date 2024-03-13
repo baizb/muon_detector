@@ -27,6 +27,7 @@
 #include "G4SystemOfUnits.hh"
 
 #include "math.h"
+#include "G4VisAttributes.hh"
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 DetectorConstruction::DetectorConstruction()
@@ -162,11 +163,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   rm_Fe->rotateX(90 * deg);
   G4double x_a = 105 * cm;
   G4double x_b = x_a + 210 * sqrt(3) * cm;
+  G4VisAttributes* blank = new G4VisAttributes(false);
 
   auto solidworld = new G4Box( "World", 20 * m , 20 * m , 20 * m );
   auto logicworld = new G4LogicalVolume( solidworld, fAir, "World" );
   auto physworld = new G4PVPlacement( nullptr, G4ThreeVector(), logicworld, "World", 0, false, 0, checkOverlaps);
-
+  logicworld->SetVisAttributes(blank);
   //Fe frame
   for ( G4int i4 = 1; i4 < 13; i4 ++ )
   {
@@ -177,6 +179,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     auto solidenv = new G4Box( "Envelope", env_sizeX , env_sizeY , 75 * cm );
     auto logicenv = new G4LogicalVolume( solidenv, fAir, "Envelope" );
     auto physenv = new G4PVPlacement( rm_env, G4ThreeVector(), logicenv, "Envelope", logicworld, false, i4, checkOverlaps);
+    logicenv->SetVisAttributes(blank);
 
     G4double Fe_posX = -1 * 105 * cm;
     G4double Fe_posY = -1 * 105 * ( 2.5 + 1.5 * sqrt(3) ) * cm;
