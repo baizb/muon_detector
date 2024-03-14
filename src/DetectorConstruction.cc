@@ -170,10 +170,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   auto physworld = new G4PVPlacement( nullptr, G4ThreeVector(), logicworld, "World", 0, false, 0, checkOverlaps);
   logicworld->SetVisAttributes(blank);
   //Fe frame
-  for ( G4int i4 = 1; i4 < 13; i4 ++ )
+  for ( G4int i4 = 0; i4 < 12; i4 ++ )
   {
     G4RotationMatrix* rm_env = new G4RotationMatrix;
-    rm_env->rotateZ( -1 * i4 * 30 * deg);
+    rm_env->rotateZ( i4 * 30 * deg);
     G4double env_sizeX = 210 * ( 1 + sqrt(3) ) * cm;
     G4double env_sizeY = 210 * ( 3 + 1.5 * sqrt(3) ) * cm;
     auto solidenv = new G4Box( "Envelope", env_sizeX , env_sizeY , 75 * cm );
@@ -196,7 +196,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
       {
         G4RotationMatrix* rm = new G4RotationMatrix;
         G4RotationMatrix* rm_fiber = new G4RotationMatrix;
+	      G4RotationMatrix* rm_cut3 = new G4RotationMatrix;
         rm_fiber->rotateX( 90 * deg);
+	      rm_cut3->rotateX( 90 * deg);
         G4double strip_posX;
         G4double strip_posY;
         G4double strip_posZ;
@@ -223,6 +225,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
         G4double BC420_sizeY = strip_sizeY - 0.01 * cm;
         G4double cut1_sizeY = BC420_sizeY;
         G4double cut2_sizeY = BC420_sizeY;
+	      G4double cut3_sizeZ = BC420_sizeY;
         G4double Cladding_sizeZ = BC420_sizeY;
         G4double Core_sizeZ = BC420_sizeY;
         G4double SiPM_posY = strip_sizeY - 0.005 * cm;
@@ -231,7 +234,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
         G4Box* solidsurface= new G4Box("Surface", 2.5 * cm, surface_sizeY, 1.25 * cm);
         G4Box* solidBC420 = new G4Box("BC420", 2.49 * cm, BC420_sizeY, 1.24 * cm);
         G4Box* solidcut1 = new G4Box("Cut1", 0.75 * mm, cut1_sizeY, 0.05 * mm);
-        G4Box* solidcut2 = new G4Box("Cut2", 0.75 * mm, cut2_sizeY, 0.75 * mm);
+        G4Box* solidcut2 = new G4Box("Cut2", 0.75 * mm, cut2_sizeY, 0.375 * mm);
+	      G4Tubs* solidcut3 = new G4Tubs("Cut3", 0, 0.75 * mm, cut3_sizeZ, 0, 180 * deg);
         G4Tubs* solidCladding = new G4Tubs("Cladding", 0.72 * mm , 0.75 * mm,  Cladding_sizeZ, 0, 360 * deg);
         G4Tubs* solidCore = new G4Tubs("Core", 0, 0.72 * mm, Core_sizeZ, 0, 360 * deg);
         auto logicstrip =
@@ -306,7 +310,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 	  	              fAir,
  	  	       	      "Cut2");
           new G4PVPlacement(nullptr,
-	 	            G4ThreeVector( 0, 0, 11.65 * mm),
+	 	            G4ThreeVector( 0, 0, 12.025 * mm),
 		            logiccut2,
 		            "Cut2",
 		            logicBC420,
@@ -314,16 +318,30 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 		            i2,
 	  	          checkOverlaps);
 
+	  auto logiccut3 =
+          new G4LogicalVolume(solidcut3,
+                              fAir,
+                              "Cut3");
+          new G4PVPlacement(rm_cut3,
+                            G4ThreeVector( 0, 0, 11.65 * mm),
+                            logiccut3,
+                            "Cut3",
+                            logicBC420,
+                            false,
+                            i2,
+                            checkOverlaps);
+
+
         G4LogicalVolume* logicCladding =
           new G4LogicalVolume(solidCladding,
                               fPethylene1,
                               "Cladding");
         G4PVPlacement* physCladding =
           new G4PVPlacement(rm_fiber,
-                            G4ThreeVector(),
+                            G4ThreeVector( 0, 0, 11.65 * mm),
                             logicCladding,
                             "Cladding",
-                            logiccut2,
+                            logicBC420,
                             false,
                             i1,
                             checkOverlaps);
@@ -334,10 +352,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                               "Core");
         G4PVPlacement* physCore =
           new G4PVPlacement(rm_fiber,
-                            G4ThreeVector(),
+                            G4ThreeVector( 0, 0, 11.65 * mm),
                             logicCore,
                             "Core",
-                            logiccut2,
+                            logicBC420,
                             false,
                             i2,
                             checkOverlaps);
