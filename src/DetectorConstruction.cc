@@ -187,7 +187,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     auto logicFe = new G4LogicalVolume( solidFe, fFe, "Fe" );
     auto physFe = new G4PVPlacement( rm_Fe, G4ThreeVector( Fe_posX, Fe_posY, 0 ), logicFe, "Fe", logicenv, false, i4, checkOverlaps);
 
-    G4Box* solidSiPM = new G4Box("SiPM", 3 * mm, 3 * mm, 0.005 * cm);
+    G4Box* solidSiPM = new G4Box("SiPM", 3 * mm, 0.005 * cm, 3 * mm);
 
     //place the scintillator
     for( G4int i1 = 0; i1 < 12; i1 ++ )
@@ -206,17 +206,17 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
         if( i1 % 2 == 1 )
         {
           rm->rotateZ(90 * deg);
-	  strip_sizeY = 2.5 * strip_num[i3] * cm;
+	        strip_sizeY = 2.5 * strip_num[i3] * cm;
           strip_posX = 0;
-  	  strip_posY = ( 5 * i2 - 72.5 ) * cm;
-	  strip_posZ = ( 7.5 * i1 - 43.75 ) * cm;
+  	      strip_posY = ( 5 * i2 - 72.5 ) * cm;
+	        strip_posZ = ( 7.5 * i1 - 43.75 ) * cm;
         }
         else
         {
-	  strip_sizeY = 75 * cm;
+	        strip_sizeY = 75 * cm;
           strip_posX = ( 2.5 + 5 * i2 - 2.5 * strip_num[i1] ) * cm;
           strip_posY = 0;
-	  strip_posZ = ( 7.5 * i1 - 38.75 ) * cm;
+	        strip_posZ = ( 7.5 * i1 - 38.75 ) * cm;
         }
 
         G4double surface_sizeY = strip_sizeY;
@@ -312,7 +312,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 		            logicBC420,
 		            false,
 		            i2,
-	  	            checkOverlaps);
+	  	          checkOverlaps);
 
         G4LogicalVolume* logicCladding =
           new G4LogicalVolume(solidCladding,
