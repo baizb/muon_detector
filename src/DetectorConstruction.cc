@@ -169,13 +169,15 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   //place the scintillator
   G4RotationMatrix* rm_cut3 = new G4RotationMatrix;
-  rm_cut3->rotateZ( 180 * deg);
+  G4RotationMatrix* rm_cut4 = new G4RotationMatrix;
+  rm_cut3->rotateZ( 270 * deg);
+  rm_cut4->rotateZ( 90 * deg );
   G4double strip_sizeZ = 200 * cm;
   G4double surface_sizeZ = strip_sizeZ;
   G4double BC420_sizeZ = strip_sizeZ - 0.01 * cm;
-  G4double cut1_sizeZ = BC420_sizeZ;
   G4double cut2_sizeZ = BC420_sizeZ;
   G4double cut3_sizeZ = BC420_sizeZ;
+  G4double cut4_sizeZ = BC420_sizeZ;
   G4double Cladding_sizeZ = BC420_sizeZ;
   G4double Core_sizeZ = BC420_sizeZ;
   G4double SiPM_posZ = strip_sizeZ - 0.005 * cm;
@@ -183,9 +185,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4Box* solidstrip = new G4Box("Strip", 2 * cm , 0.5 * cm , strip_sizeZ);
   G4Box* solidsurface= new G4Box("Surface", 2 * cm, 0.5 * cm, surface_sizeZ);
   G4Box* solidBC420 = new G4Box("BC420", 1.99 * cm, 0.49 * cm, BC420_sizeZ);
-  G4Box* solidcut1 = new G4Box("Cut1", 1.1 * mm, 0.05 * mm, cut1_sizeZ);
-  G4Box* solidcut2 = new G4Box("Cut2", 1.1 * mm, 2.4 * mm, cut2_sizeZ);
-  G4Tubs* solidcut3 = new G4Tubs("Cut3", 0, 1.1 * mm, cut3_sizeZ, 0, 180 * deg);
+  G4Box* solidcut2 = new G4Box("Cut2", 0.1 * mm, 1 * mm, cut2_sizeZ);
+  G4Tubs* solidcut3 = new G4Tubs("Cut3", 0, 1 * mm, cut3_sizeZ, 0, 180 * deg);
+  G4Tubs* solidcut4 = new G4Tubs("Cut4", 0, 1 * mm, cut4_sizeZ, 0, 180 * deg);
   G4Tubs* solidCladding = new G4Tubs("Cladding", 0.95 * mm , 1 * mm,  Cladding_sizeZ, 0, 360 * deg);
   G4Tubs* solidCore = new G4Tubs("Core", 0, 0.95 * mm, Core_sizeZ, 0, 360 * deg);
   auto logicstrip =
@@ -213,19 +215,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                       logicstrip,
                       false,
                       0,
-                      checkOverlaps);
-  
-  auto logiccut1 = 
-    new G4LogicalVolume(solidcut1,
-	    	        fAir,
-    	                "Cut1");
-    new G4PVPlacement(nullptr,
-	  	      G4ThreeVector( 0, 4.95 * mm, 0),
-		      logiccut1,
-		      "Cut1",
-		      logicsurface,
-		      false,
-		      0,
                       checkOverlaps);
   
   auto logicSiPM = new G4LogicalVolume(solidSiPM, fSiPM, "SiPM");
@@ -260,7 +249,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 	  	        fAir,
           	        "Cut2");
     new G4PVPlacement(nullptr,
-	 	      G4ThreeVector( 0, 2.5 * mm, 0),
+	 	      G4ThreeVector(),
 		      logiccut2,
 		      "Cut2",
 		       logicBC420,
@@ -272,9 +261,21 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                         fAir,
                         "Cut3");
     new G4PVPlacement(rm_cut3,
-                      G4ThreeVector( 0, 0.1 * mm, 0),
+                      G4ThreeVector( -0.1 * mm, 0, 0),
                       logiccut3,
                       "Cut3",
+                      logicBC420,
+                      false,
+                      0,
+                      checkOverlaps);
+    auto logiccut4 =
+    new G4LogicalVolume(solidcut4,
+                        fAir,
+                        "Cut4");
+    new G4PVPlacement(rm_cut4,
+                      G4ThreeVector( 0.1 * mm, 0, 0),
+                      logiccut4,
+                      "Cut4",
                       logicBC420,
                       false,
                       0,
