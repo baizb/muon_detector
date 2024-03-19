@@ -33,7 +33,7 @@
 DetectorConstruction::DetectorConstruction()
 : G4VUserDetectorConstruction()
 { 
-  fBC420 = fAir = fSiPM = fsurface = fPMMA = fPethylene1 = fFe = nullptr;
+  fBC420 = fAir = fSiPM = fsurface = fPMMA = fPethylene1 = fFe = fAl = nullptr;
   fN = fO = fC = fH = nullptr;
   DefineMaterials();
 }
@@ -59,6 +59,7 @@ void DetectorConstruction::DefineMaterials()
     fO = new G4Element("O", "O", z = 8., a = 16.00 * g / mole);
 
     fFe = nist_manager->FindOrBuildMaterial("G4_Fe");
+    fAl = nist_manager->FindOrBuildMaterial("G4_Al");
     fAir = new G4Material("Air", density = 1.29 * mg / cm3, 2);
     fAir->AddElement(fN, 70 * perCent);
     fAir->AddElement(fO, 30 * perCent);
@@ -158,7 +159,7 @@ void DetectorConstruction::DefineMaterials()
 G4VPhysicalVolume* DetectorConstruction::Construct()
 {  
   G4bool checkOverlaps = true;    //check for overlaps
-  G4int strip_num[12] = { 24, 30, 34, 30, 44, 30, 55, 30, 65, 30, 75, 30};    //the number of stripes in each layer
+  G4int strip_num[12] = { 30, 100, 40, 100, 55, 100, 70, 100, 80, 100, 95, 100};    //the number of stripes in each layer
   G4RotationMatrix* rm_Fe = new G4RotationMatrix;
   rm_Fe->rotateX(90 * deg);
   G4double x_a = 105 * cm;
@@ -170,220 +171,257 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   auto physworld = new G4PVPlacement( nullptr, G4ThreeVector(), logicworld, "World", 0, false, 0, checkOverlaps);
   logicworld->SetVisAttributes(blank);
   //Fe frame
-  for ( G4int i4 = 0; i4 < 12; i4 ++ )
+  for ( G4int i5 = 0; i5 < 2; i5 ++)
   {
-    G4RotationMatrix* rm_env = new G4RotationMatrix;
-    rm_env->rotateZ( i4 * 30 * deg);
-    G4double env_sizeX = 210 * ( 1 + sqrt(3) ) * cm;
-    G4double env_sizeY = 210 * ( 3 + 1.5 * sqrt(3) ) * cm;
-    auto solidenv = new G4Box( "Envelope", env_sizeX , env_sizeY , 75 * cm );
-    auto logicenv = new G4LogicalVolume( solidenv, fAir, "Envelope" );
-    auto physenv = new G4PVPlacement( rm_env, G4ThreeVector(), logicenv, "Envelope", logicworld, false, i4, checkOverlaps);
-    logicenv->SetVisAttributes(blank);
-
-    G4double Fe_posX = -1 * 105 * cm;
-    G4double Fe_posY = -1 * 105 * ( 2.5 + 1.5 * sqrt(3) ) * cm;
-    auto solidFe = new G4Trd( "Fe",  0.5 * x_a, 0.5 * x_b, 75 * cm, 75 * cm, 52.5 * cm);
-    auto logicFe = new G4LogicalVolume( solidFe, fFe, "Fe" );
-    auto physFe = new G4PVPlacement( rm_Fe, G4ThreeVector( Fe_posX, Fe_posY, 0 ), logicFe, "Fe", logicenv, false, i4, checkOverlaps);
-
-    G4Box* solidSiPM = new G4Box("SiPM", 3 * mm, 0.005 * cm, 3 * mm);
-
-    //place the scintillator
-    for( G4int i1 = 0; i1 < 12; i1 ++ )
+    for ( G4int i4 = 0; i4 < 12; i4 ++ )
     {
-      for( G4int i2 = 0; i2 < strip_num[i1]; i2 ++ )
+      G4RotationMatrix* rm_env = new G4RotationMatrix;
+      rm_env->rotateZ( i4 * 30 * deg);
+      G4double env_sizeX = 210 * ( 1 + sqrt(3) ) * cm;
+      G4double env_sizeY = 210 * ( 3 + 1.5 * sqrt(3) ) * cm;
+      G4double env_posZ = 202.5 * ( 2 * i5 - 1 ) * cm;
+      auto solidenv = new G4Box( "Envelope", env_sizeX , env_sizeY , 202.5 * cm );
+      auto logicenv = new G4LogicalVolume( solidenv, fAir, "Envelope" );
+      auto physenv = new G4PVPlacement( rm_env, G4ThreeVector(0,0,env_posZ), logicenv, "Envelope", logicworld, false, i4, checkOverlaps);
+      logicenv->SetVisAttributes(blank);
+
+      G4double Fe_posX = -1 * 105 * cm;
+      G4double Fe_posY = -1 * 105 * ( 2.5 + 1.5 * sqrt(3) ) * cm;
+      auto solidFe = new G4Trd( "Fe",  0.5 * x_a, 0.5 * x_b, 202.5 * cm, 202.5 * cm, 52.5 * cm);
+      auto logicFe = new G4LogicalVolume( solidFe, fFe, "Fe" );
+      auto physFe = new G4PVPlacement( rm_Fe, G4ThreeVector( Fe_posX, Fe_posY, 0 ), logicFe, "Fe", logicenv, false, i4, checkOverlaps);
+
+      G4Box* solidSiPM = new G4Box("SiPM", 3 * mm, 0.005 * cm, 3 * mm);
+
+      //place the scintillator
+      for ( G4int i1 = 0; i1 < 6; i1 ++ )
       {
-        G4RotationMatrix* rm = new G4RotationMatrix;
-        G4RotationMatrix* rm_fiber = new G4RotationMatrix;
-	      G4RotationMatrix* rm_cut3 = new G4RotationMatrix;
-        rm_fiber->rotateX( 90 * deg);
-	      rm_cut3->rotateX( 90 * deg);
-        G4double strip_posX;
-        G4double strip_posY;
-        G4double strip_posZ;
-        G4double strip_sizeY;
-        G4int i3 = i1 - 1;
-        //horizontal and vertical alternate arrangement
-        if( i1 % 2 == 1 )
+        G4int i7 = 2 * i1;
+        G4double layer_sizeX =  ( 4 * strip_num[i7] + 0.2 ) * cm;
+        G4double layer_posy = ( 1 - 2 * i5 ) * 2.4 * cm;
+        G4double layer_posZ = ( i1 * 15 - 35 ) * cm;
+        auto solidlayer = new G4Box("Layer", 0.5 * layer_sizeX, 200.1 * cm, 2.1 * cm);
+        auto logiclayer =
+              new G4LogicalVolume(solidlayer,
+                                 fAir,
+                                  "Layer");
+              new G4PVPlacement(nullptr,
+                                G4ThreeVector( 0, layer_posy, layer_posZ ),
+                                logiclayer,
+                                "Layer",
+                                logicFe,
+                                false,
+                                i1,
+                                checkOverlaps);
+        
+        G4double Al_sizeX = ( 4 * strip_num[i7] + 0.1 ) * cm;
+        auto solidAl = new G4Box("Al", 0.5 * Al_sizeX, 200.05 * cm, 2.05 * cm);
+        auto logicAl =
+              new G4LogicalVolume(solidAl,
+                                 fAl,
+                                  "Al");
+              new G4PVPlacement(nullptr,
+                                G4ThreeVector(),
+                                logicAl,
+                                "Al",
+                                logiclayer,
+                                false,
+                                i1,
+                                checkOverlaps);
+        for ( G4int i6 = 0; i6 < 2; i6 ++ )
         {
-          rm->rotateZ(90 * deg);
-	        strip_sizeY = 2.5 * strip_num[i3] * cm;
-          strip_posX = 0;
-  	      strip_posY = ( 5 * i2 - 72.5 ) * cm;
-	        strip_posZ = ( 7.5 * i1 - 43.75 ) * cm;
+          G4int i3 = 2 * i1 + i6;
+          for( G4int i2 = 0; i2 < strip_num[i3]; i2 ++ )
+          {
+            G4RotationMatrix* rm = new G4RotationMatrix;
+            G4RotationMatrix* rm_fiber = new G4RotationMatrix;
+            G4RotationMatrix* rm_cut3 = new G4RotationMatrix;
+            rm_fiber->rotateX( 90 * deg);
+            rm_cut3->rotateX( 90 * deg);
+            G4double strip_posX;
+            G4double strip_posY;
+            G4double strip_posZ;
+            G4double strip_sizeY;
+            //horizontal and vertical alternate arrangement
+            if( i6 == 1 )
+            {
+              rm->rotateZ(90 * deg);
+              strip_sizeY = 2 * strip_num[i7] * cm;
+              strip_posX = 0;
+              strip_posY = ( 4 * i2 - 198 ) * cm;
+              strip_posZ = 0.5 * cm;
+            }
+            else
+            {
+              strip_sizeY = 200 * cm;
+              strip_posX = ( 2 + 4 * i2 - 2 * strip_num[i3] ) * cm;
+              strip_posY = 0;
+              strip_posZ = -0.5 * cm;
+            } 
+            G4double surface_sizeY = strip_sizeY;
+            G4double BC420_sizeY = strip_sizeY - 0.01 * cm;
+            G4double cut1_sizeY = BC420_sizeY;
+            G4double cut2_sizeY = BC420_sizeY;
+            G4double cut3_sizeZ = BC420_sizeY;
+            G4double Cladding_sizeZ = BC420_sizeY;
+            G4double Core_sizeZ = BC420_sizeY;
+            G4double SiPM_posY = strip_sizeY - 0.005 * cm;
+            G4Box* solidstrip = new G4Box("Strip", 2 * cm , strip_sizeY, 0.5 * cm);
+            G4Box* solidsurface= new G4Box("Surface", 2 * cm, surface_sizeY, 0.5 * cm);
+            G4Box* solidBC420 = new G4Box("BC420", 1.99 * cm, BC420_sizeY, 0.49 * cm);
+            G4Box* solidcut1 = new G4Box("Cut1", 1.1 * mm, cut1_sizeY, 0.05 * mm);
+            G4Box* solidcut2 = new G4Box("Cut2", 1.1 * mm, cut2_sizeY, 0.45 * mm);
+            G4Tubs* solidcut3 = new G4Tubs("Cut3", 0, 1.1 * mm, cut3_sizeZ, 0, 180 * deg);
+            G4Tubs* solidCladding = new G4Tubs("Cladding", 0.95 * mm , 1 * mm,  Cladding_sizeZ, 0, 360 * deg);
+            G4Tubs* solidCore = new G4Tubs("Core", 0, 0.95 * mm, Core_sizeZ, 0, 360 * deg);
+            auto logicstrip =
+              new G4LogicalVolume(solidstrip,
+                                 fAir,
+                                  "Strip");
+              new G4PVPlacement(rm,
+                                G4ThreeVector( strip_posX, strip_posY, strip_posZ ),
+                                logicstrip,
+                                "Strip",
+                                logicAl,
+                                false,
+                                i3,
+                                checkOverlaps);
+
+            auto logicsurface =
+              new G4LogicalVolume(solidsurface,
+                                  fsurface,
+                                  "Surface");
+            G4PVPlacement* physsurface =
+              new G4PVPlacement(nullptr,
+                                G4ThreeVector(),
+                                logicsurface,
+                                "Surface",
+                                logicstrip,
+                                false,
+                                i2,
+                                checkOverlaps);
+
+            auto logiccut1 = 
+              new G4LogicalVolume(solidcut1,
+	      	                fAir,
+	                        "Cut1");
+              new G4PVPlacement(nullptr,
+	  	              G4ThreeVector( 0, 0, 4.95 * mm),
+		                logiccut1,
+		                "Cut1",
+		                logicsurface,
+		                false,
+		                i2,
+	                  checkOverlaps);
+  
+            auto logicSiPM = new G4LogicalVolume(solidSiPM, fSiPM, "SiPM");
+            for ( G4int j = 0; j < 2; j++ )
+            {
+              G4PVPlacement* physSiPM = new G4PVPlacement(nullptr,
+                                                          G4ThreeVector( 0, ( 2 * j - 1 ) * SiPM_posY, 2 * mm),
+                                                          logicSiPM,
+                                                          "SiPM",
+                                                          logicsurface,
+                                                          false,
+                                                          j,
+                                                          checkOverlaps);
+            }
+
+            auto logicBC420 =
+              new G4LogicalVolume(solidBC420,
+                                  fBC420,
+                                  "BC420");
+            G4PVPlacement* physBC420 =
+              new G4PVPlacement(nullptr,
+                                G4ThreeVector(),
+                                logicBC420,
+                                "BC420",
+                                logicsurface,
+                                false,
+                                i2,
+                                checkOverlaps);  
+  
+          auto logiccut2 = 
+            new G4LogicalVolume(solidcut2,
+	  	                fAir,
+ 	  	         	      "Cut2");
+            new G4PVPlacement(nullptr,
+	                            G4ThreeVector( 0, 0, 4.45 * mm),
+		                          logiccut2,
+		                          "Cut2",
+		                          logicBC420,
+		                          false,
+		                          i2,
+	                            checkOverlaps);
+
+	        auto logiccut3 =
+              new G4LogicalVolume(solidcut3,
+                                  fAir,
+                                  "Cut3");
+              new G4PVPlacement(rm_cut3,
+                                G4ThreeVector( 0, 0, 4 * mm),
+                                logiccut3,
+                                "Cut3",
+                                logicBC420,
+                                false,
+                                i2,
+                                checkOverlaps);
+
+
+            G4LogicalVolume* logicCladding =
+              new G4LogicalVolume(solidCladding,
+                                  fPethylene1,
+                                  "Cladding");
+            G4PVPlacement* physCladding =
+              new G4PVPlacement(rm_fiber,
+                                G4ThreeVector( 0, 0, 3.9 * mm),
+                                logicCladding,
+                                "Cladding",
+				logicBC420,
+				false,
+                                i3,
+                                checkOverlaps);
+
+            G4LogicalVolume* logicCore =
+              new G4LogicalVolume(solidCore,
+                                  fPMMA,
+                                  "Core");
+            G4PVPlacement* physCore =
+              new G4PVPlacement(rm_fiber,
+                                G4ThreeVector( 0, 0, 3.9 * mm),
+                                logicCore,
+                                "Core",
+                                logicBC420,
+                                false,
+                                i2,
+                                checkOverlaps);
+  
+            //define surface
+            G4OpticalSurface* Surface = new G4OpticalSurface("Surface");
+            new G4LogicalBorderSurface("Surface", physBC420, physsurface, Surface);
+            Surface->SetType(dielectric_metal);
+            Surface->SetFinish(polished);
+            Surface->SetModel(glisur);
+            G4double sur_Energy[] = { 2.38 * eV, 2.88 * eV, 3.45 * eV };
+            const G4int num = sizeof(sur_Energy) / sizeof(G4double);
+            G4double sur_RefractionIndex[] = { 1.58, 1.58, 1.58 };
+            assert(sizeof(sur_RefractionIndex) == sizeof(sur_Energy));
+            G4MaterialPropertiesTable* SURMPT = new G4MaterialPropertiesTable();
+            SURMPT->AddProperty("RINDEX", sur_Energy, sur_RefractionIndex,num);
+            Surface->SetMaterialPropertiesTable(SURMPT);
+
+            G4OpticalSurface* Cladding = new G4OpticalSurface("Cladding");
+            new G4LogicalBorderSurface("Surface", physCore, physCladding, Cladding);
+            Cladding->SetType(dielectric_metal);
+            Cladding->SetFinish(polished);
+            Cladding->SetModel(glisur);
+            G4double cladding_RefractionIndex[] = { 1.49, 1.49, 1.49 };
+            assert(sizeof(sur_RefractionIndex) == sizeof(sur_Energy));
+            G4MaterialPropertiesTable* CLAMPT = new G4MaterialPropertiesTable();
+            CLAMPT->AddProperty("RINDEX", sur_Energy, cladding_RefractionIndex,num);
+            Cladding->SetMaterialPropertiesTable(CLAMPT);
+          }
         }
-        else
-        {
-	        strip_sizeY = 75 * cm;
-          strip_posX = ( 2.5 + 5 * i2 - 2.5 * strip_num[i1] ) * cm;
-          strip_posY = 0;
-	        strip_posZ = ( 7.5 * i1 - 38.75 ) * cm;
-        }
-
-        G4double surface_sizeY = strip_sizeY;
-        G4double BC420_sizeY = strip_sizeY - 0.01 * cm;
-        G4double cut1_sizeY = BC420_sizeY;
-        G4double cut2_sizeY = BC420_sizeY;
-	      G4double cut3_sizeZ = BC420_sizeY;
-        G4double Cladding_sizeZ = BC420_sizeY;
-        G4double Core_sizeZ = BC420_sizeY;
-        G4double SiPM_posY = strip_sizeY - 0.005 * cm;
-
-        G4Box* solidstrip = new G4Box("Strip", 2.5 * cm , strip_sizeY, 1.25 * cm);
-        G4Box* solidsurface= new G4Box("Surface", 2.5 * cm, surface_sizeY, 1.25 * cm);
-        G4Box* solidBC420 = new G4Box("BC420", 2.49 * cm, BC420_sizeY, 1.24 * cm);
-        G4Box* solidcut1 = new G4Box("Cut1", 0.75 * mm, cut1_sizeY, 0.05 * mm);
-        G4Box* solidcut2 = new G4Box("Cut2", 0.75 * mm, cut2_sizeY, 0.375 * mm);
-	      G4Tubs* solidcut3 = new G4Tubs("Cut3", 0, 0.75 * mm, cut3_sizeZ, 0, 180 * deg);
-        G4Tubs* solidCladding = new G4Tubs("Cladding", 0.72 * mm , 0.75 * mm,  Cladding_sizeZ, 0, 360 * deg);
-        G4Tubs* solidCore = new G4Tubs("Core", 0, 0.72 * mm, Core_sizeZ, 0, 360 * deg);
-        auto logicstrip =
-          new G4LogicalVolume(solidstrip,
-                              fAir,
-                              "Strip");
-          new G4PVPlacement(rm,
-                            G4ThreeVector( strip_posX, strip_posY, strip_posZ ),
-                            logicstrip,
-                            "Strip",
-                            logicFe,
-                            false,
-                            i1,
-                            checkOverlaps);
-
-        auto logicsurface =
-          new G4LogicalVolume(solidsurface,
-                              fsurface,
-                              "Surface");
-        G4PVPlacement* physsurface =
-          new G4PVPlacement(nullptr,
-                            G4ThreeVector(),
-                            logicsurface,
-                            "Surface",
-                            logicstrip,
-                            false,
-                            i2,
-                            checkOverlaps);
-  
-        auto logiccut1 = 
-          new G4LogicalVolume(solidcut1,
-	    	              fAir,
-		       	      "Cut1");
-          new G4PVPlacement(nullptr,
-	  	            G4ThreeVector( 0, 0, 12.45 * mm),
-		            logiccut1,
-		            "Cut1",
-		            logicsurface,
-		            false,
-		            i2,
-		            checkOverlaps);
-  
-        auto logicSiPM = new G4LogicalVolume(solidSiPM, fSiPM, "SiPM");
-        for ( G4int j = 0; j < 2; j++ )
-        {
-          G4PVPlacement* physSiPM = new G4PVPlacement(nullptr,
-                                                      G4ThreeVector( 0, ( 2 * j - 1 ) * SiPM_posY, 9.5 * mm),
-                                                      logicSiPM,
-                                                      "SiPM",
-                                                      logicsurface,
-                                                      false,
-                                                      j,
-                                                      checkOverlaps);
-        }
-
-        auto logicBC420 =
-          new G4LogicalVolume(solidBC420,
-                              fBC420,
-                              "BC420");
-        G4PVPlacement* physBC420 =
-          new G4PVPlacement(nullptr,
-                            G4ThreeVector(),
-                            logicBC420,
-                            "BC420",
-                            logicsurface,
-                            false,
-                            i2,
-                            checkOverlaps);  
-  
-        auto logiccut2 = 
-          new G4LogicalVolume(solidcut2,
-	  	              fAir,
- 	  	       	      "Cut2");
-          new G4PVPlacement(nullptr,
-	 	            G4ThreeVector( 0, 0, 12.025 * mm),
-		            logiccut2,
-		            "Cut2",
-		            logicBC420,
-		            false,
-		            i2,
-	  	          checkOverlaps);
-
-	  auto logiccut3 =
-          new G4LogicalVolume(solidcut3,
-                              fAir,
-                              "Cut3");
-          new G4PVPlacement(rm_cut3,
-                            G4ThreeVector( 0, 0, 11.65 * mm),
-                            logiccut3,
-                            "Cut3",
-                            logicBC420,
-                            false,
-                            i2,
-                            checkOverlaps);
-
-
-        G4LogicalVolume* logicCladding =
-          new G4LogicalVolume(solidCladding,
-                              fPethylene1,
-                              "Cladding");
-        G4PVPlacement* physCladding =
-          new G4PVPlacement(rm_fiber,
-                            G4ThreeVector( 0, 0, 11.65 * mm),
-                            logicCladding,
-                            "Cladding",
-                            logicBC420,
-                            false,
-                            i1,
-                            checkOverlaps);
-
-        G4LogicalVolume* logicCore =
-          new G4LogicalVolume(solidCore,
-                              fPMMA,
-                              "Core");
-        G4PVPlacement* physCore =
-          new G4PVPlacement(rm_fiber,
-                            G4ThreeVector( 0, 0, 11.65 * mm),
-                            logicCore,
-                            "Core",
-                            logicBC420,
-                            false,
-                            i2,
-                            checkOverlaps);
-  
-        //define surface
-        G4OpticalSurface* Surface = new G4OpticalSurface("Surface");
-        new G4LogicalBorderSurface("Surface", physBC420, physsurface, Surface);
-        Surface->SetType(dielectric_metal);
-        Surface->SetFinish(polished);
-        Surface->SetModel(glisur);
-        G4double sur_Energy[] = { 2.38 * eV, 2.88 * eV, 3.45 * eV };
-        const G4int num = sizeof(sur_Energy) / sizeof(G4double);
-        G4double sur_RefractionIndex[] = { 1.58, 1.58, 1.58 };
-        assert(sizeof(sur_RefractionIndex) == sizeof(sur_Energy));
-        G4MaterialPropertiesTable* SURMPT = new G4MaterialPropertiesTable();
-        SURMPT->AddProperty("RINDEX", sur_Energy, sur_RefractionIndex,num);
-        Surface->SetMaterialPropertiesTable(SURMPT);
-
-        G4OpticalSurface* Cladding = new G4OpticalSurface("Cladding");
-        new G4LogicalBorderSurface("Surface", physCore, physCladding, Cladding);
-        Cladding->SetType(dielectric_metal);
-        Cladding->SetFinish(polished);
-        Cladding->SetModel(glisur);
-        G4double cladding_RefractionIndex[] = { 1.49, 1.49, 1.49 };
-        assert(sizeof(sur_RefractionIndex) == sizeof(sur_Energy));
-        G4MaterialPropertiesTable* CLAMPT = new G4MaterialPropertiesTable();
-        CLAMPT->AddProperty("RINDEX", sur_Energy, cladding_RefractionIndex,num);
-        Cladding->SetMaterialPropertiesTable(CLAMPT);
       }
     }
   }
