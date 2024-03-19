@@ -170,7 +170,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //place the scintillator
   G4RotationMatrix* rm_cut3 = new G4RotationMatrix;
   rm_cut3->rotateZ( 180 * deg);
-  G4double strip_sizeZ = 75 * cm;
+  G4double strip_sizeZ = 200 * cm;
   G4double surface_sizeZ = strip_sizeZ;
   G4double BC420_sizeZ = strip_sizeZ - 0.01 * cm;
   G4double cut1_sizeZ = BC420_sizeZ;
@@ -180,14 +180,14 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4double Core_sizeZ = BC420_sizeZ;
   G4double SiPM_posZ = strip_sizeZ - 0.005 * cm;
 
-  G4Box* solidstrip = new G4Box("Strip", 2.5 * cm , 1.25 * cm , strip_sizeZ);
-  G4Box* solidsurface= new G4Box("Surface", 2.5 * cm, 1.25 * cm, surface_sizeZ);
-  G4Box* solidBC420 = new G4Box("BC420", 2.49 * cm, 1.24 * cm, BC420_sizeZ);
-  G4Box* solidcut1 = new G4Box("Cut1", 0.75 * mm, 0.05 * mm, cut1_sizeZ);
-  G4Box* solidcut2 = new G4Box("Cut2", 0.75 * mm, 0.375 * mm, cut2_sizeZ);
-  G4Tubs* solidcut3 = new G4Tubs("Cut3", 0, 0.75 * mm, cut3_sizeZ, 0, 180 * deg);
-  G4Tubs* solidCladding = new G4Tubs("Cladding", 0.72 * mm , 0.75 * mm,  Cladding_sizeZ, 0, 360 * deg);
-  G4Tubs* solidCore = new G4Tubs("Core", 0, 0.72 * mm, Core_sizeZ, 0, 360 * deg);
+  G4Box* solidstrip = new G4Box("Strip", 2 * cm , 0.5 * cm , strip_sizeZ);
+  G4Box* solidsurface= new G4Box("Surface", 2 * cm, 0.5 * cm, surface_sizeZ);
+  G4Box* solidBC420 = new G4Box("BC420", 1.99 * cm, 0.49 * cm, BC420_sizeZ);
+  G4Box* solidcut1 = new G4Box("Cut1", 1.1 * mm, 0.05 * mm, cut1_sizeZ);
+  G4Box* solidcut2 = new G4Box("Cut2", 1.1 * mm, 2.4 * mm, cut2_sizeZ);
+  G4Tubs* solidcut3 = new G4Tubs("Cut3", 0, 1.1 * mm, cut3_sizeZ, 0, 180 * deg);
+  G4Tubs* solidCladding = new G4Tubs("Cladding", 0.95 * mm , 1 * mm,  Cladding_sizeZ, 0, 360 * deg);
+  G4Tubs* solidCore = new G4Tubs("Core", 0, 0.95 * mm, Core_sizeZ, 0, 360 * deg);
   auto logicstrip =
     new G4LogicalVolume(solidstrip,
                         fAir,
@@ -220,7 +220,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 	    	        fAir,
     	                "Cut1");
     new G4PVPlacement(nullptr,
-	  	      G4ThreeVector( 0, 12.45 * mm, 0),
+	  	      G4ThreeVector( 0, 4.95 * mm, 0),
 		      logiccut1,
 		      "Cut1",
 		      logicsurface,
@@ -232,7 +232,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   for ( G4int j = 0; j < 2; j++ )
   {
     G4PVPlacement* physSiPM = new G4PVPlacement(nullptr,
-                                                G4ThreeVector( 0, 9.5 * mm , ( 2 * j - 1 ) * SiPM_posZ),
+                                                G4ThreeVector( 0, 0, ( 2 * j - 1 ) * SiPM_posZ),
                                                 logicSiPM,
                                                 "SiPM",
                                                 logicsurface,
@@ -260,7 +260,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 	  	        fAir,
           	        "Cut2");
     new G4PVPlacement(nullptr,
-	 	      G4ThreeVector( 0, 12.025 * mm, 0),
+	 	      G4ThreeVector( 0, 2.5 * mm, 0),
 		      logiccut2,
 		      "Cut2",
 		       logicBC420,
@@ -272,7 +272,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                         fAir,
                         "Cut3");
     new G4PVPlacement(rm_cut3,
-                      G4ThreeVector( 0, 11.65 * mm, 0),
+                      G4ThreeVector( 0, 0.1 * mm, 0),
                       logiccut3,
                       "Cut3",
                       logicBC420,
@@ -286,7 +286,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                         "Cladding");
   G4PVPlacement* physCladding =
     new G4PVPlacement(nullptr,
-                      G4ThreeVector( 0, 11.65 * mm, 0),
+                      G4ThreeVector(),
                       logicCladding,
                       "Cladding",
                       logicBC420,
@@ -300,7 +300,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                         "Core");
   G4PVPlacement* physCore =
     new G4PVPlacement(nullptr,
-                      G4ThreeVector( 0, 11.65 * mm, 0),
+                      G4ThreeVector(),
                       logicCore,
                       "Core",
                       logicBC420,
