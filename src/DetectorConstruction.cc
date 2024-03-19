@@ -236,8 +236,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
             G4RotationMatrix* rm = new G4RotationMatrix;
             G4RotationMatrix* rm_fiber = new G4RotationMatrix;
             G4RotationMatrix* rm_cut3 = new G4RotationMatrix;
+	    G4RotationMatrix* rm_cut4 = new G4RotationMatrix;
             rm_fiber->rotateX( 90 * deg);
             rm_cut3->rotateX( 90 * deg);
+	    rm_cut3->rotateZ( 270 * deg );
+	    rm_cut4->rotateX( 90 * deg);
+            rm_cut4->rotateZ( 90 * deg );
+
             G4double strip_posX;
             G4double strip_posY;
             G4double strip_posZ;
@@ -260,19 +265,19 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
             } 
             G4double surface_sizeY = strip_sizeY;
             G4double BC420_sizeY = strip_sizeY - 0.01 * cm;
-            G4double cut1_sizeY = BC420_sizeY;
             G4double cut2_sizeY = BC420_sizeY;
             G4double cut3_sizeZ = BC420_sizeY;
-            G4double Cladding_sizeZ = BC420_sizeY;
+            G4double cut4_sizeZ = BC420_sizeY;
+	    G4double Cladding_sizeZ = BC420_sizeY;
             G4double Core_sizeZ = BC420_sizeY;
             G4double SiPM_posY = strip_sizeY - 0.005 * cm;
             G4Box* solidstrip = new G4Box("Strip", 2 * cm , strip_sizeY, 0.5 * cm);
             G4Box* solidsurface= new G4Box("Surface", 2 * cm, surface_sizeY, 0.5 * cm);
             G4Box* solidBC420 = new G4Box("BC420", 1.99 * cm, BC420_sizeY, 0.49 * cm);
-            G4Box* solidcut1 = new G4Box("Cut1", 1.1 * mm, cut1_sizeY, 0.05 * mm);
-            G4Box* solidcut2 = new G4Box("Cut2", 1.1 * mm, cut2_sizeY, 0.45 * mm);
-            G4Tubs* solidcut3 = new G4Tubs("Cut3", 0, 1.1 * mm, cut3_sizeZ, 0, 180 * deg);
-            G4Tubs* solidCladding = new G4Tubs("Cladding", 0.95 * mm , 1 * mm,  Cladding_sizeZ, 0, 360 * deg);
+            G4Box* solidcut2 = new G4Box("Cut2", 0.1 * mm, cut2_sizeY, 1 * mm);
+            G4Tubs* solidcut3 = new G4Tubs("Cut3", 0, 1 * mm, cut3_sizeZ, 0, 180 * deg);
+            G4Tubs* solidcut4 = new G4Tubs("Cut4", 0, 1 * mm, cut4_sizeZ, 0, 180 * deg);
+	    G4Tubs* solidCladding = new G4Tubs("Cladding", 0.95 * mm , 1 * mm,  Cladding_sizeZ, 0, 360 * deg);
             G4Tubs* solidCore = new G4Tubs("Core", 0, 0.95 * mm, Core_sizeZ, 0, 360 * deg);
             auto logicstrip =
               new G4LogicalVolume(solidstrip,
@@ -301,24 +306,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                                 i2,
                                 checkOverlaps);
 
-            auto logiccut1 = 
-              new G4LogicalVolume(solidcut1,
-	      	                fAir,
-	                        "Cut1");
-              new G4PVPlacement(nullptr,
-	  	              G4ThreeVector( 0, 0, 4.95 * mm),
-		                logiccut1,
-		                "Cut1",
-		                logicsurface,
-		                false,
-		                i2,
-	                  checkOverlaps);
-  
             auto logicSiPM = new G4LogicalVolume(solidSiPM, fSiPM, "SiPM");
             for ( G4int j = 0; j < 2; j++ )
             {
               G4PVPlacement* physSiPM = new G4PVPlacement(nullptr,
-                                                          G4ThreeVector( 0, ( 2 * j - 1 ) * SiPM_posY, 2 * mm),
+                                                          G4ThreeVector( 0, ( 2 * j - 1 ) * SiPM_posY, 0),
                                                           logicSiPM,
                                                           "SiPM",
                                                           logicsurface,
@@ -346,7 +338,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 	  	                fAir,
  	  	         	      "Cut2");
             new G4PVPlacement(nullptr,
-	                            G4ThreeVector( 0, 0, 4.45 * mm),
+	                            G4ThreeVector(),
 		                          logiccut2,
 		                          "Cut2",
 		                          logicBC420,
@@ -359,14 +351,25 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                                   fAir,
                                   "Cut3");
               new G4PVPlacement(rm_cut3,
-                                G4ThreeVector( 0, 0, 4 * mm),
+                                G4ThreeVector( -0.1 * mm, 0, 0 ),
                                 logiccut3,
                                 "Cut3",
                                 logicBC420,
                                 false,
                                 i2,
                                 checkOverlaps);
-
+	      auto logiccut4 =
+              new G4LogicalVolume(solidcut4,
+                                  fAir,
+                                  "Cut4");
+              new G4PVPlacement(rm_cut4,
+                                G4ThreeVector( 0.1 * mm, 0, 0 ),
+                                logiccut4,
+                                "Cut4",
+                                logicBC420,
+                                false,
+                                i2,
+                                checkOverlaps);
 
             G4LogicalVolume* logicCladding =
               new G4LogicalVolume(solidCladding,
@@ -374,7 +377,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                                   "Cladding");
             G4PVPlacement* physCladding =
               new G4PVPlacement(rm_fiber,
-                                G4ThreeVector( 0, 0, 3.9 * mm),
+                                G4ThreeVector(),
                                 logicCladding,
                                 "Cladding",
 				logicBC420,
@@ -388,7 +391,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                                   "Core");
             G4PVPlacement* physCore =
               new G4PVPlacement(rm_fiber,
-                                G4ThreeVector( 0, 0, 3.9 * mm),
+                                G4ThreeVector(),
                                 logicCore,
                                 "Core",
                                 logicBC420,
