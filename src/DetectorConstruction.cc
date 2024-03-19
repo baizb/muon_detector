@@ -270,7 +270,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
             G4Box* solidsurface= new G4Box("Surface", 2 * cm, surface_sizeY, 0.5 * cm);
             G4Box* solidBC420 = new G4Box("BC420", 1.99 * cm, BC420_sizeY, 0.49 * cm);
             G4Box* solidcut1 = new G4Box("Cut1", 1.1 * mm, cut1_sizeY, 0.05 * mm);
-            G4Box* solidcut2 = new G4Box("Cut2", 1.1 * mm, cut2_sizeY, 0.45 * mm);
+            G4Box* solidcut2 = new G4Box("Cut2", 1.1 * mm, cut2_sizeY, 2.4 * mm);
             G4Tubs* solidcut3 = new G4Tubs("Cut3", 0, 1.1 * mm, cut3_sizeZ, 0, 180 * deg);
             G4Tubs* solidCladding = new G4Tubs("Cladding", 0.95 * mm , 1 * mm,  Cladding_sizeZ, 0, 360 * deg);
             G4Tubs* solidCore = new G4Tubs("Core", 0, 0.95 * mm, Core_sizeZ, 0, 360 * deg);
@@ -318,7 +318,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
             for ( G4int j = 0; j < 2; j++ )
             {
               G4PVPlacement* physSiPM = new G4PVPlacement(nullptr,
-                                                          G4ThreeVector( 0, ( 2 * j - 1 ) * SiPM_posY, 2 * mm),
+                                                          G4ThreeVector( 0, ( 2 * j - 1 ) * SiPM_posY, 0),
                                                           logicSiPM,
                                                           "SiPM",
                                                           logicsurface,
@@ -346,7 +346,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 	  	                fAir,
  	  	         	      "Cut2");
             new G4PVPlacement(nullptr,
-	                            G4ThreeVector( 0, 0, 4.45 * mm),
+	                            G4ThreeVector( 0, 0, 2.5 * mm),
 		                          logiccut2,
 		                          "Cut2",
 		                          logicBC420,
@@ -359,7 +359,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                                   fAir,
                                   "Cut3");
               new G4PVPlacement(rm_cut3,
-                                G4ThreeVector( 0, 0, 4 * mm),
+                                G4ThreeVector( 0, 0, 0.1 * mm),
                                 logiccut3,
                                 "Cut3",
                                 logicBC420,
@@ -374,7 +374,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                                   "Cladding");
             G4PVPlacement* physCladding =
               new G4PVPlacement(rm_fiber,
-                                G4ThreeVector( 0, 0, 3.9 * mm),
+                                G4ThreeVector(),
                                 logicCladding,
                                 "Cladding",
 				logicBC420,
@@ -388,7 +388,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
                                   "Core");
             G4PVPlacement* physCore =
               new G4PVPlacement(rm_fiber,
-                                G4ThreeVector( 0, 0, 3.9 * mm),
+                                G4ThreeVector(),
                                 logicCore,
                                 "Core",
                                 logicBC420,
