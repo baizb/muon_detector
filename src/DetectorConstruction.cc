@@ -199,7 +199,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
         G4int i7 = 2 * i1;
         G4double layer_sizeX =  ( 4 * strip_num[i7] + 0.2 ) * cm;
         G4double layer_posy = ( 1 - 2 * i5 ) * 2.4 * cm;
-        G4double layer_posZ = ( i1 * 15 - 35 ) * cm;
+        G4double layer_posZ = ( i1 * 12.5 - 21.5 ) * cm;
         auto solidlayer = new G4Box("Layer", 0.5 * layer_sizeX, 200.1 * cm, 2.1 * cm);
         auto logiclayer =
               new G4LogicalVolume(solidlayer,
